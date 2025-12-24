@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detección de URLs Maliciosas - SVM</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+        }
+        
+        .container {
+            max-width: 1200px;
+            width: 100%;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+            margin-top: 2rem;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #4a6fa5 0%, #2c3e50 100%);
+            color: white;
+            padding: 3rem 2rem;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            max-width: 800px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+        
+        .content {
+            padding: 3rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 1px solid #e1e8ed;
+            text-align: center;
+        }
+        
+        .card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        }
+        
+        .card-icon {
+            font-size: 3rem;
+            margin-bottom: 1.5rem;
+            color: #4a6fa5;
+        }
+        
+        .card h3 {
+            font-size: 1.5rem;
+            color: #2c3e50;
+            margin-bottom: 1rem;
+        }
+        
+        .card p {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #4a6fa5 0%, #2c3e50 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        
+        .btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 20px rgba(74, 111, 165, 0.3);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .steps {
+            padding: 3rem;
+            background: #f8f9fa;
+            border-top: 1px solid #e1e8ed;
+        }
+        
+        .steps h2 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 2rem;
+            font-size: 2rem;
+        }
+        
+        .steps-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        .step {
+            text-align: center;
+            padding: 1.5rem;
+        }
+        
+        .step-number {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #4a6fa5 0%, #2c3e50 100%);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin: 0 auto 1rem;
+        }
+        
+        .step h4 {
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 2rem;
+            color: #666;
+            border-top: 1px solid #e1e8ed;
+        }
+        
+        @media (max-width: 768px) {
+            .content {
+                grid-template-columns: 1fr;
+                padding: 1.5rem;
+            }
+            
+            .header {
+                padding: 2rem 1rem;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 Sistema de Detección de URLs Maliciosas</h1>
+            <p>Utilizando Máquinas de Vectores de Soporte (SVM) para identificar URLs de phishing y malware. Procesa datasets completos o verifica URLs individuales en tiempo real.</p>
+        </div>
+        
+        <div class="content">
+            <div class="card">
+                <div class="card-icon">📊</div>
+                <h3>Procesar Dataset Completo</h3>
+                <p>Analiza el dataset completo de URLs para obtener métricas detalladas del modelo SVM, incluyendo precisión, recall y gráficas de resultados.</p>
+                <form action="{% url 'results' %}" method="POST" style="margin-top: 1rem;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn">
+                        🚀 Procesar Dataset
+                    </button>
+                </form>
+            </div>
+            
+            <div class="card">
+                <div class="card-icon">🔮</div>
+                <h3>Predecir URL Individual</h3>
+                <p>Introduce las características de una URL específica para verificar si es maliciosa o benigna utilizando nuestro modelo SVM entrenado.</p>
+                <a href="{% url 'predict' %}" class="btn btn-secondary">
+                    🎯 Verificar URL
+                </a>
+            </div>
+            
+            <div class="card">
+                <div class="card-icon">📈</div>
+                <h3>Ver Métricas del Modelo</h3>
+                <p>Consulta las métricas actuales del modelo SVM, incluyendo matriz de confusión, distribución de clases y límites de decisión.</p>
+                <button onclick="loadMetrics()" class="btn" style="background: linear-gradient(135deg, #00b09b 0%, #96c93d 100%);">
+                    📊 Ver Métricas
+                </button>
+            </div>
+        </div>
+        
+        <div class="steps">
+            <h2>📋 Cómo Funciona</h2>
+            <div class="steps-grid">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <h4>Carga de Datos</h4>
+                    <p>Se procesa el dataset ISCX-URL2016 con características léxicas de URLs</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <h4>Preprocesamiento</h4>
+                    <p>Limpieza, imputación de valores y escalado de características</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <h4>Entrenamiento SVM</h4>
+                    <p>Entrenamiento del modelo con kernel lineal y ajuste de parámetros</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">4</div>
+                    <h4>Visualización</h4>
+                    <p>Generación de gráficas interactivas con resultados del modelo</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>Sistema de Detección de URLs Maliciosas | SVM Model | Django API</p>
+            <p>📊 Procesa el dataset completo para ver las gráficas de resultados</p>
+        </div>
+    </div>
+
+    <script>
+        async function loadMetrics() {
+            try {
+                const response = await fetch('/api/model-metrics/');
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    alert(`Métricas del Modelo:\n\n` +
+                          `✅ Precisión: ${(data.metrics.accuracy * 100).toFixed(2)}%\n` +
+                          `🎯 Recall: ${(data.metrics.recall * 100).toFixed(2)}%\n` +
+                          `📊 F1-Score: ${(data.metrics.f1_score * 100).toFixed(2)}%`);
+                }
+            } catch (error) {
+                alert('Error cargando métricas: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,68 @@
+# Entorno virtual
+venv/
+env/
+ENV/
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Django
+*.log
+*.pot
+*.pyc
+__pycache__/
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# Archivos estáticos
+/staticfiles/
+/media/
+
+# ML Model (no subir modelos grandes)
+ml_model/
+!ml_model/__init__.py
+
+# Dataset (no subir datos grandes)
+dataset/Phishing.csv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Sistema
+.DS_Store
+Thumbs.db
+
+# Archivos temporales
+*.tmp
+*.temp
+
+# Logs
+logs/
+*.log
+
+# Archivos de checkpoint
+checkpoint/
+*.ckpt
+
+# Entorno Python
+.python-version
+Pipfile
+Pipfile.lock
+poetry.lock
+pyproject.toml
+
+# Testing
+.coverage
+htmlcov/
+.pytest_cache/
+
+# Build
+dist/
+build/
+*.egg-info/

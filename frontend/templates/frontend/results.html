@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resultados del Análisis - SVM</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #4a6fa5 100%);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.2rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .nav {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .nav-btn {
+            padding: 10px 20px;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            text-decoration: none;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-btn:hover {
+            background: rgba(255,255,255,0.2);
+            transform: translateY(-2px);
+        }
+        
+        .content {
+            padding: 2rem;
+        }
+        
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+        
+        .metric-card {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+            text-align: center;
+            border-top: 5px solid #4a6fa5;
+            transition: transform 0.3s ease;
+        }
+        
+        .metric-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .metric-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #2c3e50;
+            margin: 1rem 0;
+        }
+        
+        .metric-label {
+            color: #666;
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .graphs-container {
+            margin-top: 3rem;
+        }
+        
+        .graphs-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+        
+        .graph-card {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+            text-align: center;
+        }
+        
+        .graph-card h3 {
+            color: #2c3e50;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        
+        .graph-img {
+            width: 100%;
+            max-width: 500px;
+            height: auto;
+            border-radius: 10px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+        
+        .info-box {
+            background: linear-gradient(135deg, #fdfcfb 0%, #e2d1c3 100%);
+            border-left: 5px solid #d35400;
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin: 2rem 0;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #4a6fa5 0%, #2c3e50 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 20px rgba(74, 111, 165, 0.3);
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            color: #666;
+        }
+        
+        .loading-spinner {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #4a6fa5;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        @media (max-width: 768px) {
+            .graphs-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .graph-card {
+                padding: 1rem;
+            }
+            
+            .content {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 Resultados del Análisis SVM</h1>
+            <div class="nav">
+                <a href="/" class="nav-btn">🏠 Inicio</a>
+                <a href="/predict/" class="nav-btn">🔮 Predecir URL</a>
+                <a href="/api/model-metrics/" class="nav-btn" target="_blank">📈 API Métricas</a>
+            </div>
+        </div>
+        
+        <div class="content">
+            {% if error %}
+                <div class="info-box" style="background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%); border-left-color: #e74c3c;">
+                    <h3>❌ Error</h3>
+                    <p>{{ error }}</p>
+                    <a href="/" class="btn">Volver al Inicio</a>
+                </div>
+            {% elif status == 'success' %}
+                <!-- Métricas Principales -->
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-label">Precisión</div>
+                        <div class="metric-value">{{ metrics.accuracy|floatformat:3 }}</div>
+                        <p>Exactitud del modelo</p>
+                    </div>
+                    
+                    <div class="metric-card">
+                        <div class="metric-label">Recall</div>
+                        <div class="metric-value">{{ metrics.precision|floatformat:3 }}</div>
+                        <p>Precisión para phishing</p>
+                    </div>
+                    
+                    <div class="metric-card">
+                        <div class="metric-label">F1-Score</div>
+                        <div class="metric-value">{{ metrics.f1_score|floatformat:3 }}</div>
+                        <p>Media armónica</p>
+                    </div>
+                    
+                    <div class="metric-card">
+                        <div class="metric-label">Predicciones</div>
+                        <div class="metric-value">{{ predictions_count }}</div>
+                        <p>URLs analizadas</p>
+                    </div>
+                </div>
+                
+                <!-- Información del Dataset -->
+                <div class="info-box">
+                    <h3>📋 Información del Dataset</h3>
+                    <p><strong>Total de URLs:</strong> {{ predictions_count|default:"15367" }}</p>
+                    <p><strong>URLs Benignas:</strong> {{ class_distribution.benign|default:"7781" }}</p>
+                    <p><strong>URLs Phishing:</strong> {{ class_distribution.phishing|default:"7586" }}</p>
+                    <p><strong>Modelo:</strong> SVM con Kernel Lineal</p>
+                </div>
+                
+                <!-- Gráficas -->
+                <div class="graphs-container">
+                    <h2 style="color: #2c3e50; margin-bottom: 1rem;">📈 Visualización de Resultados</h2>
+                    
+                    <div class="graphs-grid">
+                        <!-- Distribución de Clases -->
+                        {% if graphs.class_distribution %}
+                        <div class="graph-card">
+                            <h3>📊 Distribución de Clases</h3>
+                            <img src="data:image/png;base64,{{ graphs.class_distribution }}" 
+                                 alt="Distribución de Clases" class="graph-img">
+                            <p>Distribución de URLs benignas vs phishing en el dataset</p>
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Matriz de Confusión -->
+                        {% if graphs.confusion_matrix %}
+                        <div class="graph-card">
+                            <h3>🎯 Matriz de Confusión</h3>
+                            <img src="data:image/png;base64,{{ graphs.confusion_matrix }}" 
+                                 alt="Matriz de Confusión" class="graph-img">
+                            <p>Comparación entre predicciones y valores reales</p>
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Métricas del Modelo -->
+                        {% if graphs.model_metrics %}
+                        <div class="graph-card">
+                            <h3>📈 Métricas del Modelo</h3>
+                            <img src="data:image/png;base64,{{ graphs.model_metrics }}" 
+                                 alt="Métricas del Modelo" class="graph-img">
+                            <p>Comparativa de precisión, recall y F1-score</p>
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Límite de Decisión -->
+                        {% if graphs.decision_boundary %}
+                        <div class="graph-card">
+                            <h3>🔍 Límite de Decisión SVM</h3>
+                            <img src="data:image/png;base64,{{ graphs.decision_boundary }}" 
+                                 alt="Límite de Decisión" class="graph-img">
+                            <p>Visualización 2D del límite de decisión del modelo</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Botones de Acción -->
+                <div style="text-align: center; margin-top: 3rem;">
+                    <a href="/" class="btn">🏠 Volver al Inicio</a>
+                    <button onclick="window.location.reload()" class="btn" style="background: linear-gradient(135deg, #00b09b 0%, #96c93d 100%);">
+                        🔄 Reprocesar Dataset
+                    </button>
+                </div>
+                
+            {% else %}
+                <!-- Estado de carga -->
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    <h3>Procesando Dataset...</h3>
+                    <p>El modelo SVM está analizando las URLs. Esto puede tomar unos segundos.</p>
+                    <p>Se están generando las gráficas de resultados...</p>
+                </div>
+                
+                <script>
+                    // Recargar la página después de 3 segundos para mostrar resultados
+                    setTimeout(function() {
+                        window.location.reload();
+                    }, 3000);
+                </script>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

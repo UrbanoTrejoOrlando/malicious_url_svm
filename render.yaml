@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: malicious-url-detector
+    env: python
+    buildCommand: "./build.sh"
+    startCommand: "gunicorn malicious_url_detector.wsgi:application"
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: malicious_url_db
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: WEB_CONCURRENCY
+        value: 4
+    autoDeploy: true
+    healthCheckPath: /api/model-metrics/
+    domains:
+      - malicious-url-detector.onrender.com
+
+databases:
+  - name: malicious_url_db
+    databaseName: malicious_url
+    user: malicious_user
+    plan: free

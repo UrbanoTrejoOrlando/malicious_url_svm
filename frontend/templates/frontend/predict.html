@@ -1,0 +1,1189 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cargar y Analizar URLs - SVM</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #4a6fa5 100%);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.2rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .nav {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .nav-btn {
+            padding: 10px 20px;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            text-decoration: none;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-btn:hover {
+            background: rgba(255,255,255,0.2);
+            transform: translateY(-2px);
+        }
+        
+        .content {
+            padding: 2rem;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+        
+        @media (max-width: 1024px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .upload-section {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+        }
+        
+        .upload-section h2 {
+            color: #2c3e50;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        
+        .upload-zone {
+            border: 3px dashed #4a6fa5;
+            border-radius: 15px;
+            padding: 3rem 2rem;
+            text-align: center;
+            margin-bottom: 2rem;
+            background: #f8fafc;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .upload-zone:hover {
+            background: #edf2f7;
+            border-color: #2c3e50;
+        }
+        
+        .upload-zone.dragover {
+            background: #e3f2fd;
+            border-color: #2196f3;
+            transform: scale(1.02);
+        }
+        
+        .upload-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            color: #4a6fa5;
+        }
+        
+        .upload-text {
+            font-size: 1.2rem;
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+        }
+        
+        .upload-subtext {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+        
+        .file-input {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+        
+        .file-info {
+            background: #f0f7ff;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-top: 1rem;
+            display: none;
+        }
+        
+        .file-info.show {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .file-name {
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+        }
+        
+        .file-size {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+        
+        .file-preview {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 1rem;
+            max-height: 200px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 0.85rem;
+            white-space: pre-wrap;
+        }
+        
+        .format-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+        
+        .format-card {
+            border: 2px solid #e1e8ed;
+            border-radius: 10px;
+            padding: 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .format-card:hover {
+            border-color: #4a6fa5;
+            transform: translateY(-5px);
+        }
+        
+        .format-card.selected {
+            border-color: #4a6fa5;
+            background: #f0f7ff;
+        }
+        
+        .format-icon {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+        
+        .format-name {
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+        }
+        
+        .format-desc {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #4a6fa5 0%, #2c3e50 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            margin-top: 1rem;
+            width: 100%;
+        }
+        
+        .btn:hover:not(:disabled) {
+            transform: scale(1.05);
+            box-shadow: 0 10px 20px rgba(74, 111, 165, 0.3);
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #dc3545 0%, #fd7e14 100%);
+        }
+        
+        .results-section {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        
+        .results-count {
+            background: #4a6fa5;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+        
+        .results-grid {
+            display: grid;
+            gap: 1rem;
+        }
+        
+        .result-card {
+            padding: 1.5rem;
+            border-radius: 10px;
+            animation: slideIn 0.5s ease;
+            border-left: 5px solid;
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        
+        .result-benign {
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+            border-left-color: #28a745;
+        }
+        
+        .result-phishing {
+            background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+            border-left-color: #dc3545;
+        }
+        
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .result-id {
+            font-weight: bold;
+            color: #2c3e50;
+            background: rgba(255,255,255,0.5);
+            padding: 3px 10px;
+            border-radius: 15px;
+        }
+        
+        .result-status {
+            font-weight: bold;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }
+        
+        .status-benign {
+            background: #28a745;
+            color: white;
+        }
+        
+        .status-phishing {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .result-probability {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .probability-bar {
+            flex: 1;
+            height: 10px;
+            background: #e1e8ed;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        
+        .probability-fill {
+            height: 100%;
+            border-radius: 5px;
+            transition: width 1s ease;
+        }
+        
+        .fill-benign {
+            background: linear-gradient(90deg, #28a745, #20c997);
+        }
+        
+        .fill-phishing {
+            background: linear-gradient(90deg, #dc3545, #fd7e14);
+        }
+        
+        .probability-value {
+            font-weight: bold;
+            color: #2c3e50;
+            min-width: 60px;
+        }
+        
+        .result-features {
+            background: rgba(255,255,255,0.5);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1rem;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+        
+        .feature-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem;
+            padding: 3px 0;
+            font-size: 0.85rem;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+        
+        .feature-row:last-child {
+            border-bottom: none;
+        }
+        
+        .feature-name {
+            color: #666;
+            font-weight: 500;
+        }
+        
+        .feature-value {
+            color: #2c3e50;
+            text-align: right;
+            font-family: monospace;
+        }
+        
+        .summary-card {
+            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin-top: 2rem;
+        }
+        
+        .summary-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .stat {
+            text-align: center;
+            padding: 1rem;
+            background: rgba(255,255,255,0.1);
+            border-radius: 8px;
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 3rem;
+        }
+        
+        .loading-spinner {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #4a6fa5;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .error-box {
+            background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+            border-left: 5px solid #dc3545;
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin: 1rem 0;
+        }
+        
+        .download-section {
+            text-align: center;
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 2px solid #f0f0f0;
+        }
+        
+        .template-download {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #f8f9fa;
+            border: 2px dashed #6c757d;
+            border-radius: 10px;
+            text-decoration: none;
+            color: #495057;
+            margin: 0.5rem;
+            transition: all 0.3s ease;
+        }
+        
+        .template-download:hover {
+            background: #e9ecef;
+            border-color: #495057;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📁 Cargar y Analizar URLs</h1>
+            <div class="nav">
+                <a href="/" class="nav-btn">🏠 Inicio</a>
+                <a href="/results/" class="nav-btn">📊 Resultados Dataset</a>
+            </div>
+        </div>
+        
+        <div class="content">
+            <!-- Sección de Carga -->
+            <div class="upload-section">
+                <h2>📤 Cargar Archivo con Características</h2>
+                
+                <div class="format-options">
+                    <div class="format-card selected" data-format="csv">
+                        <div class="format-icon">📊</div>
+                        <div class="format-name">CSV</div>
+                        <div class="format-desc">Archivo separado por comas</div>
+                    </div>
+                    
+                    <div class="format-card" data-format="json">
+                        <div class="format-icon">📄</div>
+                        <div class="format-name">JSON</div>
+                        <div class="format-desc">Formato de objetos JSON</div>
+                    </div>
+                    
+                    <div class="format-card" data-format="json_array">
+                        <div class="format-icon">📋</div>
+                        <div class="format-name">JSON Array</div>
+                        <div class="format-desc">Array de objetos JSON</div>
+                    </div>
+                </div>
+                
+                <div class="upload-zone" id="uploadZone">
+                    <div class="upload-icon">📁</div>
+                    <div class="upload-text">Arrastra y suelta tu archivo aquí</div>
+                    <div class="upload-subtext">o haz clic para seleccionar</div>
+                    <div class="upload-subtext">Formatos soportados: CSV, JSON</div>
+                    <input type="file" id="fileInput" class="file-input" accept=".csv,.json,.txt">
+                </div>
+                
+                <div class="file-info" id="fileInfo">
+                    <div class="file-name" id="fileName"></div>
+                    <div class="file-size" id="fileSize"></div>
+                    <div class="file-preview" id="filePreview"></div>
+                </div>
+                
+                <button class="btn btn-success" id="analyzeBtn" disabled>
+                    🔍 Analizar Archivo
+                </button>
+                
+                <div class="download-section">
+                    <h3>📥 Descargar Plantillas</h3>
+                    <a href="/static/templates/url_features_template.csv" class="template-download" download>
+                        📊 Plantilla CSV
+                    </a>
+                    <a href="/static/templates/url_features_template.json" class="template-download" download>
+                        📄 Plantilla JSON
+                    </a>
+                    <p style="color: #666; font-size: 0.9rem; margin-top: 1rem;">
+                        Usa las plantillas para crear tu archivo con las características
+                    </p>
+                </div>
+            </div>
+            
+            <!-- Sección de Resultados -->
+            <div class="results-section">
+                <div class="results-header">
+                    <h2>📊 Resultados del Análisis</h2>
+                    <div class="results-count" id="resultsCount">0 URLs</div>
+                </div>
+                
+                <div id="resultsContainer">
+                    <div class="loading" id="defaultResults">
+                        <div class="upload-icon">📋</div>
+                        <h3>Esperando archivo...</h3>
+                        <p>Carga un archivo con características de URLs para analizarlas.</p>
+                        <p>El sistema procesará cada URL y mostrará si es benigna o maliciosa.</p>
+                    </div>
+                </div>
+                
+                <div id="summarySection" style="display: none;">
+                    <!-- Resumen se generará aquí -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Variables globales
+        let currentFile = null;
+        let selectedFormat = 'csv';
+        let analysisResults = [];
+        
+        // Elementos DOM
+        const uploadZone = document.getElementById('uploadZone');
+        const fileInput = document.getElementById('fileInput');
+        const fileInfo = document.getElementById('fileInfo');
+        const fileName = document.getElementById('fileName');
+        const fileSize = document.getElementById('fileSize');
+        const filePreview = document.getElementById('filePreview');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const resultsContainer = document.getElementById('resultsContainer');
+        const resultsCount = document.getElementById('resultsCount');
+        const summarySection = document.getElementById('summarySection');
+        const defaultResults = document.getElementById('defaultResults');
+        const formatCards = document.querySelectorAll('.format-card');
+        
+        // Configurar formato seleccionado
+        formatCards.forEach(card => {
+            card.addEventListener('click', function() {
+                formatCards.forEach(c => c.classList.remove('selected'));
+                this.classList.add('selected');
+                selectedFormat = this.dataset.format;
+            });
+        });
+        
+        // Manejar drag & drop
+        uploadZone.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            this.classList.add('dragover');
+        });
+        
+        uploadZone.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            this.classList.remove('dragover');
+        });
+        
+        uploadZone.addEventListener('drop', function(e) {
+            e.preventDefault();
+            this.classList.remove('dragover');
+            
+            if (e.dataTransfer.files.length > 0) {
+                handleFile(e.dataTransfer.files[0]);
+            }
+        });
+        
+        // Manejar selección de archivo
+        fileInput.addEventListener('change', function(e) {
+            if (this.files.length > 0) {
+                handleFile(this.files[0]);
+            }
+        });
+        
+        // Función para manejar archivo seleccionado
+        function handleFile(file) {
+            currentFile = file;
+            
+            // Mostrar información del archivo
+            fileName.textContent = file.name;
+            fileSize.textContent = formatFileSize(file.size);
+            fileInfo.classList.add('show');
+            
+            // Habilitar botón de análisis
+            analyzeBtn.disabled = false;
+            analyzeBtn.innerHTML = '🔍 Analizar Archivo';
+            
+            // Mostrar vista previa
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const content = e.target.result;
+                let previewText = content.substring(0, 500);
+                
+                if (content.length > 500) {
+                    previewText += '...\n\n[Mostrando primeros 500 caracteres]';
+                }
+                
+                filePreview.textContent = previewText;
+                
+                // Pre-analizar para detectar formato
+                detectFormat(content);
+            };
+            
+            reader.readAsText(file);
+        }
+        
+        // Detectar formato del archivo
+        function detectFormat(content) {
+            try {
+                JSON.parse(content);
+                // Es JSON, verificar si es array
+                const parsed = JSON.parse(content);
+                if (Array.isArray(parsed)) {
+                    selectedFormat = 'json_array';
+                } else {
+                    selectedFormat = 'json';
+                }
+                
+                // Actualizar selección de formato
+                formatCards.forEach(card => {
+                    card.classList.remove('selected');
+                    if (card.dataset.format === selectedFormat) {
+                        card.classList.add('selected');
+                    }
+                });
+                
+            } catch (e) {
+                // No es JSON, asumir CSV
+                selectedFormat = 'csv';
+                formatCards.forEach(card => {
+                    card.classList.remove('selected');
+                    if (card.dataset.format === 'csv') {
+                        card.classList.add('selected');
+                    }
+                });
+            }
+        }
+        
+        // Formatear tamaño de archivo
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+        
+        // Analizar archivo
+        analyzeBtn.addEventListener('click', async function() {
+            if (!currentFile) return;
+            
+            // Mostrar estado de carga
+            this.disabled = true;
+            this.innerHTML = '<div class="loading-spinner" style="display: inline-block; width: 20px; height: 20px; margin-right: 10px;"></div> Analizando...';
+            
+            // Limpiar resultados anteriores
+            analysisResults = [];
+            resultsContainer.innerHTML = '';
+            defaultResults.style.display = 'none';
+            
+            // Leer y procesar archivo
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                try {
+                    const content = e.target.result;
+                    let urlsData = [];
+                    
+                    // Parsear según el formato
+                    switch (selectedFormat) {
+                        case 'csv':
+                            urlsData = parseCSV(content);
+                            break;
+                        case 'json':
+                            urlsData = [JSON.parse(content)];
+                            break;
+                        case 'json_array':
+                            urlsData = JSON.parse(content);
+                            break;
+                    }
+                    
+                    // Validar datos
+                    if (!Array.isArray(urlsData) || urlsData.length === 0) {
+                        throw new Error('Formato de archivo no válido');
+                    }
+                    
+                    // Limitar a 50 URLs para no sobrecargar
+                    if (urlsData.length > 50) {
+                        urlsData = urlsData.slice(0, 50);
+                        showMessage(`⚠️ Se analizarán solo las primeras 50 URLs (de ${urlsData.length})`);
+                    }
+                    
+                    // Procesar cada URL
+                    for (let i = 0; i < urlsData.length; i++) {
+                        const urlFeatures = urlsData[i];
+                        await analyzeURL(urlFeatures, i);
+                    }
+                    
+                    // Mostrar resumen
+                    showSummary();
+                    
+                    // Habilitar botón nuevamente
+                    analyzeBtn.disabled = false;
+                    analyzeBtn.innerHTML = '🔍 Analizar Archivo';
+                    
+                } catch (error) {
+                    showError('Error procesando archivo: ' + error.message);
+                    analyzeBtn.disabled = false;
+                    analyzeBtn.innerHTML = '🔍 Analizar Archivo';
+                }
+            };
+            
+            reader.readAsText(currentFile);
+        });
+        
+        // Parsear CSV
+        function parseCSV(csvText) {
+            const lines = csvText.split('\n');
+            const headers = lines[0].split(',').map(h => h.trim());
+            const results = [];
+            
+            for (let i = 1; i < lines.length; i++) {
+                if (lines[i].trim() === '') continue;
+                
+                const values = lines[i].split(',');
+                const obj = {};
+                
+                for (let j = 0; j < headers.length; j++) {
+                    if (j < values.length) {
+                        let value = values[j].trim();
+                        
+                        // Convertir números
+                        if (!isNaN(value) && value !== '') {
+                            value = Number(value);
+                        }
+                        
+                        obj[headers[j]] = value;
+                    }
+                }
+                
+                if (Object.keys(obj).length > 0) {
+                    results.push(obj);
+                }
+            }
+            
+            return results;
+        }
+        
+        // Buscar y reemplazar la función analyzeURL con esta versión mejorada
+async function analyzeURL(features, index) {
+    try {
+        // Mostrar en consola para debug
+        console.log(`Analizando URL ${index + 1}:`, features);
+        
+        // Enviar a la API
+        const response = await fetch('/api/predict-url/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({ features: features })
+        });
+        
+        const data = await response.json();
+        
+        if (data.status === 'success') {
+            // Guardar resultado
+            analysisResults.push({
+                id: index + 1,
+                features: features,
+                prediction: data.prediction,
+                probability: data.probability,
+                is_malicious: data.is_malicious
+            });
+            
+            // Mostrar resultado
+            showResult({
+                id: index + 1,
+                prediction: data.prediction,
+                probability: data.probability,
+                is_malicious: data.is_malicious,
+                features: features
+            });
+            
+            // Actualizar contador
+            resultsCount.textContent = `${analysisResults.length} URLs`;
+            
+        } else {
+            throw new Error(data.message || 'Error en la predicción');
+        }
+        
+    } catch (error) {
+        console.error(`Error analizando URL ${index + 1}:`, error);
+        showError(`Error analizando URL ${index + 1}: ${error.message}`);
+    }
+}
+
+// Y añadir esta función para procesar archivos completos
+async function processCompleteFile(fileContent) {
+    try {
+        // Usar el endpoint de procesamiento de archivos
+        const formData = new FormData();
+        const blob = new Blob([fileContent], { type: 'application/json' });
+        formData.append('file', blob, 'urls.json');
+        
+        const response = await fetch('/api/process-file/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: formData
+        });
+        
+        const data = await response.json();
+        
+        if (data.status === 'success') {
+            // Mostrar resultados
+            analysisResults = data.results;
+            resultsContainer.innerHTML = '';
+            defaultResults.style.display = 'none';
+            
+            // Mostrar cada resultado
+            data.results.forEach((result, index) => {
+                if (!result.error) {
+                    showResult({
+                        id: result.id,
+                        prediction: result.prediction,
+                        probability: result.probability,
+                        is_malicious: result.is_malicious,
+                        features: {}
+                    });
+                }
+            });
+            
+            // Actualizar contador
+            resultsCount.textContent = `${data.successful}/${data.total_urls} URLs`;
+            
+            // Mostrar resumen
+            showFileSummary(data);
+            
+        } else {
+            throw new Error(data.message);
+        }
+        
+    } catch (error) {
+        console.error('Error procesando archivo:', error);
+        showError('Error procesando archivo: ' + error.message);
+    }
+}
+
+// Función para mostrar resumen del archivo
+function showFileSummary(data) {
+    summarySection.innerHTML = `
+        <div class="summary-card">
+            <h3>📈 Resumen del Análisis</h3>
+            <p><strong>Archivo:</strong> ${data.file_name}</p>
+            <p><strong>Tamaño:</strong> ${formatFileSize(data.file_size)}</p>
+            <div class="summary-stats">
+                <div class="stat">
+                    <div class="stat-value">${data.total_urls}</div>
+                    <div class="stat-label">Total URLs</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" style="color: #28a745;">${data.benign_count}</div>
+                    <div class="stat-label">URLs Benignas</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" style="color: #dc3545;">${data.phishing_count}</div>
+                    <div class="stat-label">URLs Phishing</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" style="color: #6c757d;">${data.failed}</div>
+                    <div class="stat-label">Errores</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="download-section">
+            <button class="btn btn-secondary" onclick="downloadResults()">
+                💾 Descargar Resultados
+            </button>
+            <button class="btn" onclick="clearAnalysis()">
+                🗑️ Limpiar Análisis
+            </button>
+        </div>
+    `;
+    
+    summarySection.style.display = 'block';
+}
+
+// Modificar el manejador del botón "Analizar Archivo" para usar processCompleteFile
+// En el evento click del analyzeBtn, reemplazar:
+analyzeBtn.addEventListener('click', async function() {
+    if (!currentFile) return;
+    
+    // Mostrar estado de carga
+    this.disabled = true;
+    this.innerHTML = '<div class="loading-spinner" style="display: inline-block; width: 20px; height: 20px; margin-right: 10px;"></div> Analizando...';
+    
+    // Leer archivo
+    const reader = new FileReader();
+    reader.onload = async function(e) {
+        try {
+            const content = e.target.result;
+            
+            // Usar el endpoint de procesamiento de archivos
+            await processCompleteFile(content);
+            
+            // Habilitar botón
+            analyzeBtn.disabled = false;
+            analyzeBtn.innerHTML = '🔍 Analizar Archivo';
+            
+        } catch (error) {
+            showError('Error procesando archivo: ' + error.message);
+            analyzeBtn.disabled = false;
+            analyzeBtn.innerHTML = '🔍 Analizar Archivo';
+        }
+    };
+    
+    reader.readAsText(currentFile);
+});
+        
+        
+        // Mostrar resultado individual
+        function showResult(result) {
+            const resultCard = document.createElement('div');
+            resultCard.className = `result-card ${result.is_malicious ? 'result-phishing' : 'result-benign'}`;
+            
+            // Crear características en formato compacto
+            const featuresHtml = Object.entries(result.features)
+                .slice(0, 5) // Mostrar solo 5 características principales
+                .map(([key, value]) => `
+                    <div class="feature-row">
+                        <div class="feature-name">${key}</div>
+                        <div class="feature-value">${typeof value === 'number' ? value.toFixed(4) : value}</div>
+                    </div>
+                `).join('');
+            
+            resultCard.innerHTML = `
+                <div class="result-header">
+                    <div class="result-id">URL #${result.id}</div>
+                    <div class="result-status ${result.is_malicious ? 'status-phishing' : 'status-benign'}">
+                        ${result.is_malicious ? 'PHISHING' : 'BENIGNA'}
+                    </div>
+                </div>
+                
+                <div class="result-probability">
+                    <div class="probability-bar">
+                        <div class="probability-fill ${result.is_malicious ? 'fill-phishing' : 'fill-benign'}" 
+                             style="width: ${result.probability * 100}%"></div>
+                    </div>
+                    <div class="probability-value">
+                        ${(result.probability * 100).toFixed(1)}%
+                    </div>
+                </div>
+                
+                <div class="result-features">
+                    ${featuresHtml}
+                    ${Object.keys(result.features).length > 5 ? 
+                        `<div class="feature-row">
+                            <div class="feature-name">...</div>
+                            <div class="feature-value">+${Object.keys(result.features).length - 5} más</div>
+                        </div>` : ''}
+                </div>
+            `;
+            
+            resultsContainer.appendChild(resultCard);
+        }
+        
+        // Mostrar resumen
+        function showSummary() {
+            const benignCount = analysisResults.filter(r => !r.is_malicious).length;
+            const phishingCount = analysisResults.filter(r => r.is_malicious).length;
+            const totalCount = analysisResults.length;
+            
+            summarySection.innerHTML = `
+                <div class="summary-card">
+                    <h3>📈 Resumen del Análisis</h3>
+                    <div class="summary-stats">
+                        <div class="stat">
+                            <div class="stat-value">${totalCount}</div>
+                            <div class="stat-label">Total URLs</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-value" style="color: #28a745;">${benignCount}</div>
+                            <div class="stat-label">URLs Benignas</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-value" style="color: #dc3545;">${phishingCount}</div>
+                            <div class="stat-label">URLs Phishing</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-value">${totalCount > 0 ? ((phishingCount / totalCount) * 100).toFixed(1) : 0}%</div>
+                            <div class="stat-label">Tasa Phishing</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="download-section">
+                    <button class="btn btn-secondary" onclick="downloadResults()">
+                        💾 Descargar Resultados
+                    </button>
+                    <button class="btn" onclick="clearAnalysis()">
+                        🗑️ Limpiar Análisis
+                    </button>
+                </div>
+            `;
+            
+            summarySection.style.display = 'block';
+        }
+        
+        // Descargar resultados
+        function downloadResults() {
+            const dataStr = JSON.stringify(analysisResults, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            
+            const downloadLink = document.createElement('a');
+            downloadLink.href = URL.createObjectURL(dataBlob);
+            downloadLink.download = `analisis_urls_${new Date().toISOString().slice(0,10)}.json`;
+            downloadLink.click();
+        }
+        
+        // Limpiar análisis
+        function clearAnalysis() {
+            analysisResults = [];
+            resultsContainer.innerHTML = defaultResults.outerHTML;
+            summarySection.style.display = 'none';
+            resultsCount.textContent = '0 URLs';
+            fileInfo.classList.remove('show');
+            currentFile = null;
+            fileInput.value = '';
+            analyzeBtn.disabled = true;
+        }
+        
+        // Mostrar mensaje
+        function showMessage(message) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'error-box';
+            messageDiv.style.background = 'linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%)';
+            messageDiv.style.borderLeftColor = '#ffc107';
+            messageDiv.innerHTML = `<strong>⚠️ Nota:</strong> ${message}`;
+            resultsContainer.insertBefore(messageDiv, resultsContainer.firstChild);
+        }
+        
+        // Mostrar error
+        function showError(message) {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error-box';
+            errorDiv.innerHTML = `<strong>❌ Error:</strong> ${message}`;
+            resultsContainer.appendChild(errorDiv);
+        }
+        
+        // Obtener cookie CSRF
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+        
+        // Crear templates al cargar la página
+        document.addEventListener('DOMContentLoaded', function() {
+            createTemplates();
+        });
+        
+        // Crear templates de ejemplo
+        function createTemplates() {
+            // Solo crear si no existen
+            const csvTemplate = `domainUrlRatio,domainlength,Querylength,tld,NumberofDotsinURL,path_token_count,avgdomaintokenlen,charcompvowels,charcompace,urlLen
+0.157895,9,0,3,2,8,6.666,11,5,47
+0.511628,22,0,3,3,13,4.5,24,17,66`;
+            
+            const jsonTemplate = [
+                {
+                    "domainUrlRatio": 0.157895,
+                    "domainlength": 9,
+                    "Querylength": 0,
+                    "tld": 3,
+                    "NumberofDotsinURL": 2,
+                    "path_token_count": 8,
+                    "avgdomaintokenlen": 6.666,
+                    "charcompvowels": 11,
+                    "charcompace": 5,
+                    "urlLen": 47
+                },
+                {
+                    "domainUrlRatio": 0.511628,
+                    "domainlength": 22,
+                    "Querylength": 0,
+                    "tld": 3,
+                    "NumberofDotsinURL": 3,
+                    "path_token_count": 13,
+                    "avgdomaintokenlen": 4.5,
+                    "charcompvowels": 24,
+                    "charcompace": 17,
+                    "urlLen": 66
+                }
+            ];
+            
+            // Guardar en localStorage para descarga
+            localStorage.setItem('csv_template', csvTemplate);
+            localStorage.setItem('json_template', JSON.stringify(jsonTemplate, null, 2));
+        }
+    </script>
+</body>
+</html>
