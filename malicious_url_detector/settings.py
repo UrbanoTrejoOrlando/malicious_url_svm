@@ -13,8 +13,22 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-dev-key-change-in-pro
 # Debug solo en desarrollo
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
-# Hosts permitidos
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+# Hosts permitidos - CONFIGURACIÓN CORREGIDA PARA RENDER
+ALLOWED_HOSTS = []
+
+# Agregar hosts desde variable de entorno (para Render y desarrollo)
+hosts_from_env = os.environ.get('ALLOWED_HOSTS', '')
+if hosts_from_env:
+    ALLOWED_HOSTS.extend(hosts_from_env.split(','))
+
+# Agregar hostname de Render automáticamente
+RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
+if RENDER_EXTERNAL_HOSTNAME:
+    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
+
+# Si DEBUG está activo, permitir localhost (para desarrollo)
+if DEBUG:
+    ALLOWED_HOSTS.extend(['localhost', '127.0.0.1', '[::1]'])
 
 # Aplicaciones instaladas
 INSTALLED_APPS = [
@@ -66,7 +80,7 @@ WSGI_APPLICATION = 'malicious_url_detector.wsgi.application'
 if os.environ.get('DATABASE_URL'):
     import dj_database_url
     DATABASES = {
-        'default': dj_database_url.config(default=os.environ.get('DATABASE_URL'))
+        'default': dj_database_url.config(default=os.environ.get('DATABASE_URL'), conn_max_age=600)
     }
 else:
     DATABASES = {
@@ -137,5 +151,13 @@ LOGGING = {
     },
 }
 
-# CSRF settings para producción
-CSRF_TRUSTED_ORIGINS = os.environ.get('CSRF_TRUSTED_ORIGINS', '').split(',')
+# CSRF settings para producción - CORREGIDO
+csrf_trusted_origins = os.environ.get('CSRF_TRUSTED_ORIGINS', '')
+CSRF_TRUSTED_ORIGINS = []
+
+if csrf_trusted_origins:
+    CSRF_TRUSTED_ORIGINS.extend(csrf_trusted_origins.split(','))
+
+# Agregar automáticamente el dominio de Render a CSRF si existe
+if RENDER_EXTERNAL_HOSTNAME:
+    CSRF_TRUSTED_ORIGINS.append(f'https://{RENDER_EXTERNAL_HOSTNAME}')
