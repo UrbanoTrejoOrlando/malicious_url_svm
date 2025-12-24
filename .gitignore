@@ -25,8 +25,7 @@ db.sqlite3-journal
 ml_model/
 !ml_model/__init__.py
 
-# Dataset (no subir datos grandes)
-dataset/Phishing.csv
+
 
 # IDE
 .vscode/
