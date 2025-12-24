@@ -21,3 +21,5 @@ psycopg2-binary==2.9.7
 
 # Seguridad
 cryptography==41.0.5
+
+requests==2.31.0
