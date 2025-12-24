@@ -21,10 +21,6 @@ db.sqlite3-journal
 /staticfiles/
 /media/
 
-# ML Model (no subir modelos grandes)
-ml_model/
-!ml_model/__init__.py
-
 
 
 # IDE
