@@ -195,7 +195,7 @@
                 <div class="card-icon">📊</div>
                 <h3>Procesar Dataset Completo</h3>
                 <p>Analiza el dataset completo de URLs para obtener métricas detalladas del modelo SVM, incluyendo precisión, recall y gráficas de resultados.</p>
-                <form action="{% url 'results' %}" method="POST" style="margin-top: 1rem;">
+                <form action="{% url 'frontend_results' %}" method="POST" style="margin-top: 1rem;">
                     {% csrf_token %}
                     <button type="submit" class="btn">
                         🚀 Procesar Dataset
@@ -207,7 +207,7 @@
                 <div class="card-icon">🔮</div>
                 <h3>Predecir URL Individual</h3>
                 <p>Introduce las características de una URL específica para verificar si es maliciosa o benigna utilizando nuestro modelo SVM entrenado.</p>
-                <a href="{% url 'predict' %}" class="btn btn-secondary">
+                <a href="{% url 'frontend_predict' %}" class="btn btn-secondary">
                     🎯 Verificar URL
                 </a>
             </div>
