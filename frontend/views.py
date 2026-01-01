@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect
 import requests
 import json
 from django.conf import settings
-from django.http import JsonResponse, HttpResponse
+from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
 def index(request):
@@ -16,25 +16,16 @@ def results(request):
     # Si se envió el formulario, procesar el dataset
     if request.method == 'POST':
         try:
-            # URL dinámica para producción/desarrollo
-            if request.is_secure():
-                scheme = "https://"
-            else:
-                scheme = "http://"
-            
-            host = request.get_host()  # Obtiene el host actual (ej: malicious-url-svm.onrender.com)
-            api_url = f"{scheme}{host}/api/process-dataset/"
-            
+            # Llamar a la API para procesar el dataset
+            api_url = 'http://localhost:8000/api/process-dataset/'
             response = requests.post(api_url)
             
             if response.status_code == 200:
                 data = response.json()
                 context.update(data)
             else:
-                context['error'] = f'Error al procesar el dataset: {response.status_code}'
+                context['error'] = 'Error al procesar el dataset'
                 
-        except requests.exceptions.ConnectionError as e:
-            context['error'] = 'No se pudo conectar con la API. Asegúrate de que el servidor esté funcionando.'
         except Exception as e:
             context['error'] = str(e)
     
@@ -51,6 +42,8 @@ def predict(request):
 
 def download_template(request, template_type):
     """Descargar plantillas de ejemplo"""
+    from django.http import HttpResponse
+    
     if template_type == 'csv':
         content = """domainUrlRatio,domainlength,Querylength,tld,NumberofDotsinURL,path_token_count,avgdomaintokenlen
 0.157895,9,0,3,2,8,6.666666
@@ -97,29 +90,12 @@ def api_predict(request):
             data = json.loads(request.body)
             features = data.get('features', {})
             
-            # URL dinámica para producción/desarrollo
-            if request.is_secure():
-                scheme = "https://"
-            else:
-                scheme = "http://"
-            
-            host = request.get_host()
-            api_url = f"{scheme}{host}/api/predict-url/"
-            
+            # Llamar al endpoint principal de la API
+            api_url = 'http://localhost:8000/api/predict-url/'
             response = requests.post(api_url, json={'features': features})
             
             return JsonResponse(response.json())
             
-        except requests.exceptions.ConnectionError as e:
-            return JsonResponse({
-                'status': 'error',
-                'message': 'No se pudo conectar con el servidor de predicción'
-            }, status=503)
-        except json.JSONDecodeError as e:
-            return JsonResponse({
-                'status': 'error',
-                'message': 'Formato JSON inválido en la solicitud'
-            }, status=400)
         except Exception as e:
             return JsonResponse({
                 'status': 'error',
@@ -130,14 +106,3 @@ def api_predict(request):
         'status': 'error',
         'message': 'Método no permitido'
     }, status=405)
-
-# Función auxiliar para construir URLs de API
-def build_api_url(request, endpoint):
-    """Construye una URL completa para un endpoint de API"""
-    if request.is_secure():
-        scheme = "https://"
-    else:
-        scheme = "http://"
-    
-    host = request.get_host()
-    return f"{scheme}{host}/api/{endpoint}/"
