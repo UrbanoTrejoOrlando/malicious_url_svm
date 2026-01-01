@@ -5,11 +5,11 @@ from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/', include('svm_api.urls')),
-    path('', include('frontend.urls')),
+    path('', include('frontend.urls')),  # Frontend en la raíz
+    path('api/', include('svm_api.urls')),  # API bajo /api/
 ]
 
-# Servir archivos estáticos en desarrollo
+# Solo servir archivos estáticos/media en desarrollo
 if settings.DEBUG:
-    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
